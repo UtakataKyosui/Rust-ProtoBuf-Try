@@ -6,8 +6,17 @@ rust-version.workspace = true
 license.workspace = true
 
 [dependencies]
+axum = { version = "0.8", features = ["ws"] }
+futures-util = "0.3.34"
 # Google公式 Rust Protobuf。protoc 36.2 と対応(x.y.z ↔ protoc y.z)するため `=` で固定する。
 protobuf = "=4.36.2-release"
+tokio = { version = "1.53.3", features = ["rt-multi-thread", "macros", "sync", "signal", "net", "time"] }
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
+uuid = { version = "1.26.1", features = ["v4"] }
 
 [build-dependencies]
 protobuf-codegen = "=4.36.2-release"
+
+[dev-dependencies]
+tokio-tungstenite = "0.30.0"

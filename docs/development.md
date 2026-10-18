@@ -41,4 +41,4 @@ cargo test --workspace
 ## フォローアップ(Phase 1 で対応)
 
 - Issue #8 の「Protoc / Protobuf のバージョン固定」は #9 の検証結果(protobuf 4.36.2-release / protoc 36.2)で確定した。
-- Rust 側の `banner` テストはスモークレベル。サーバー実装(Phase 2)で実質的なテストに置き換える。
+- Rust 側のサーバー実装とテストは [server.md](server.md) を参照(`banner` スモークテストは置き換え済み)。

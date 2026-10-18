@@ -35,3 +35,9 @@ cargo test --workspace
 - Cargo workspace は resolver 3 / edition 2024。Google公式 protobuf クレートは beta で protoc の厳密なバージョン一致が必要なため、
   この環境構築ではまだ依存に追加せず、Phase 1 で検証して固定する。
 - `proto/` を通信型の単一の定義元とし、CI で `buf lint` を実行する。
+
+## フォローアップ(Phase 1 で対応)
+
+- `packages/protocol-ts` には `build` script がなく、`pnpm -r build` の検証対象外。`buf generate` による生成フロー導入時に build / typecheck と CI を追加する。
+- Issue #8 の「Protoc / Protobuf のバージョン固定」は、Google公式Rust protobuf・protoc の検証(G1)後に固定する。#8 完了前に受入条件を更新するか、残件を別Issueで追跡する。
+- Rust 側の `banner` テストはスモークレベル。サーバー実装(Phase 2)で実質的なテストに置き換える。

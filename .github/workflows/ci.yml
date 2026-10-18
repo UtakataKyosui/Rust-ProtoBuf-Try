@@ -70,6 +70,7 @@ jobs:
       - run: pnpm proto:lint
       - name: Schema compatibility (buf breaking)
         if: github.event_name == 'pull_request'
-        run: |
-          git fetch origin main:refs/remotes/origin/main
-          pnpm proto:breaking
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        # main が進んでも誤検知しないよう、PR イベントの base SHA に固定して比較する
+        run: pnpm exec buf breaking --against ".git#ref=${BASE_SHA}"

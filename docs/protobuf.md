@@ -55,7 +55,8 @@ CI の `proto` ジョブで lint を、PR では breaking も実行する。
 
 ```sh
 pnpm proto:generate   # TS 生成のみ
-pnpm check / test / build   # protocol-ts は実行前に自動で再生成する
+pnpm install                 # protocol-ts の postinstall で生成される
+pnpm check / test / build   # protocol-ts は実行前にも再生成する
 ```
 
 生成物をコミットしないため、クリーン環境でも `pnpm install && pnpm build` / `cargo build` で再現できる。

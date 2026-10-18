@@ -1,40 +1,70 @@
 syntax = "proto3";
 
+// ProtoLive の WebSocket 通信スキーマ(単一公開ルーム)。
+// 1 つの WebSocket Binary フレームに ClientEnvelope / ServerEnvelope を 1 つシリアライズして載せる。
+// 長さプレフィックスは不要。
 package protolive.v1;
 
+// ---------------------------------------------------------------------------
+// Client -> Server
+// ---------------------------------------------------------------------------
+
+// ルームへの参加要求。接続後、最初に送る。
 message JoinRequest {
+  // クライアントが希望する表示名。信頼せず、サーバー側で長さ・内容を検証する。
   string nickname = 1;
 }
 
+// チャット発言の送信要求。
 message SendChatRequest {
+  // 発言本文。信頼せず、サーバー側で長さを検証する。
+  // ID とタイムスタンプはクライアントから受け取らず、サーバーが採番する。
   string content = 1;
 }
 
+// クライアントからサーバーへ送るメッセージ。
 message ClientEnvelope {
   oneof payload {
     JoinRequest join = 1;
     SendChatRequest send_chat = 2;
   }
+
+  // 将来の拡張(ping 等)用。
+  reserved 3 to 15;
 }
 
+// ---------------------------------------------------------------------------
+// Server -> Client
+// ---------------------------------------------------------------------------
+
+// サーバーが確定させたチャット発言。
 message ChatMessage {
+  // サーバーが採番したメッセージ ID。
   string id = 1;
+  // サーバーが採番した送信者(接続)ID。
   string sender_id = 2;
   string nickname = 3;
   string content = 4;
+  // サーバーが付与した時刻(Unix エポックからのミリ秒)。
   uint64 timestamp_ms = 5;
+
+  // 将来の拡張用。
+  reserved 6 to 15;
 }
 
+// メンバーの入退室通知。
 message MemberEvent {
   string sender_id = 1;
   string nickname = 2;
 }
 
+// エラー通知。`code` は機械可読な識別子、`message` は人間向けの説明。
 message ErrorEvent {
   string code = 1;
   string message = 2;
 }
 
+// サーバーからクライアントへ送るメッセージ。
 message ServerEnvelope {
   oneof payload {
     MemberEvent joined = 1;
@@ -42,4 +72,7 @@ message ServerEnvelope {
     ChatMessage chat = 3;
     ErrorEvent error = 4;
   }
+
+  // 将来の拡張(履歴、pong 等)用。
+  reserved 5 to 15;
 }

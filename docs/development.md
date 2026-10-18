@@ -10,7 +10,8 @@
 | Vite+ (`vp`) | 1.3.0 | `vite-plus` を `apps/web` / `packages/protocol-ts` で固定 |
 | Buf | 1.74.0 | ルート `package.json` |
 | `@bufbuild/protobuf` | 2.16.0 | `packages/protocol-ts` |
-| Google公式 Rust protobuf / protoc | 未確定 | Phase 1 (G1) で検証後、同一バージョンに固定 |
+| Google公式 Rust protobuf | 4.36.2-release | `apps/server/Cargo.toml`(`=` 固定。詳細は [protobuf.md](protobuf.md)) |
+| protoc | 36.2 | CI(`PROTOC_VERSION`)、手元は PATH / `PROTOC` |
 
 ## コマンド
 
@@ -21,6 +22,7 @@ pnpm check        # vp check (format + lint + typecheck; vite.config.tsの lint.
 pnpm test         # vp test run
 pnpm build        # vp build
 pnpm proto:lint   # buf lint
+pnpm proto:generate  # buf generate (TS)
 
 cargo fmt --all --check
 cargo clippy --workspace --all-targets -- -D warnings
@@ -33,11 +35,10 @@ cargo test --workspace
   `pnpm-workspace.yaml` の `overrides` で `vite` を `@voidzero-dev/vite-plus-core`、`vitest` を同梱版に統一している。
   pnpm の peer 警告 (`unmet peer vite`) は vite-plus 同梱の vite がバージョン表記を持つため出るが、動作には影響しない。
 - Cargo workspace は resolver 3 / edition 2024。Google公式 protobuf クレートは beta で protoc の厳密なバージョン一致が必要なため、
-  この環境構築ではまだ依存に追加せず、Phase 1 で検証して固定する。
+  `protobuf` / `protobuf-codegen` を `=4.36.2-release` に固定し、protoc 36.2 を必要とする(`docs/protobuf.md`)。
 - `proto/` を通信型の単一の定義元とし、CI で `buf lint` を実行する。
 
 ## フォローアップ(Phase 1 で対応)
 
-- `packages/protocol-ts` には `build` script がなく、`pnpm -r build` の検証対象外。`buf generate` による生成フロー導入時に build / typecheck と CI を追加する。
-- Issue #8 の「Protoc / Protobuf のバージョン固定」は、Google公式Rust protobuf・protoc の検証(G1)後に固定する。#8 完了前に受入条件を更新するか、残件を別Issueで追跡する。
+- Issue #8 の「Protoc / Protobuf のバージョン固定」は #9 の検証結果(protobuf 4.36.2-release / protoc 36.2)で確定した。
 - Rust 側の `banner` テストはスモークレベル。サーバー実装(Phase 2)で実質的なテストに置き換える。

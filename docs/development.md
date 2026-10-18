@@ -23,6 +23,8 @@ pnpm test         # vp test run
 pnpm build        # vp build
 pnpm proto:lint   # buf lint
 pnpm proto:generate  # buf generate (TS)
+pnpm --filter @protolive/web e2e  # Playwright E2E(要: cargo build -p protolive-server、初回は playwright install chromium)
+cargo bench -p protolive-server --bench codec  # JSON / Protobuf ベンチ(docs/benchmark.md)
 
 cargo fmt --all --check
 cargo clippy --workspace --all-targets -- -D warnings
@@ -41,4 +43,4 @@ cargo test --workspace
 ## フォローアップ(Phase 1 で対応)
 
 - Issue #8 の「Protoc / Protobuf のバージョン固定」は #9 の検証結果(protobuf 4.36.2-release / protoc 36.2)で確定した。
-- Rust 側のサーバー実装とテストは [server.md](server.md) を参照(`banner` スモークテストは置き換え済み)。
+- Rust 側のサーバー実装とテストは [server.md](server.md)、Web クライアントは [web.md](web.md)、ベンチマークは [benchmark.md](benchmark.md) を参照。

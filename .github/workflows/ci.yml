@@ -53,6 +53,37 @@ jobs:
       - run: pnpm -r test
       - run: pnpm -r build
 
+  e2e:
+    # 2 ブラウザ送受信・不正入力・再接続・サーバー再起動を実ブラウザで検証する(README の MVP 受け入れ条件)。
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.97.0
+      - uses: Swatinem/rust-cache@v2
+      - name: Install protoc ${{ env.PROTOC_VERSION }}
+        run: |
+          curl -sSLfo protoc.zip "https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VERSION}/protoc-${PROTOC_VERSION}-linux-x86_64.zip"
+          sudo unzip -q protoc.zip -d /usr/local bin/protoc 'include/*'
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.28.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: cargo build -p protolive-server --locked
+      - run: pnpm --filter @protolive/web exec playwright install --with-deps chromium
+      - run: pnpm --filter @protolive/web e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-traces
+          path: apps/web/test-results
+          retention-days: 7
+
   proto:
     runs-on: ubuntu-24.04
     steps:

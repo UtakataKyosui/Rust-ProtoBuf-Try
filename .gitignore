@@ -6,3 +6,5 @@ dist
 .env.*
 !.env.example
 .DS_Store
+# buf generate による生成物(protoc-gen-es)。コミットせず、check/test/build 時に再生成する。
+packages/protocol-ts/src/gen

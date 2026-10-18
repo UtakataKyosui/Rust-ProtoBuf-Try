@@ -1,0 +1,16 @@
+{
+  "name": "protolive",
+  "private": true,
+  "packageManager": "pnpm@10.28.0",
+  "engines": { "node": ">=22.12.0" },
+  "scripts": {
+    "dev": "pnpm --filter @protolive/web dev",
+    "check": "pnpm -r check",
+    "test": "pnpm -r test",
+    "build": "pnpm -r build",
+    "proto:lint": "buf lint"
+  },
+  "devDependencies": {
+    "@bufbuild/buf": "1.74.0"
+  }
+}

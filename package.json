@@ -2,7 +2,7 @@
   "name": "protolive",
   "private": true,
   "packageManager": "pnpm@10.28.0",
-  "engines": { "node": ">=22.12.0" },
+  "engines": { "node": "^22.18.0 || >=24.11.0" },
   "scripts": {
     "dev": "pnpm --filter @protolive/web dev",
     "check": "pnpm -r check",

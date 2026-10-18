@@ -5,7 +5,7 @@
 | ツール | バージョン | 固定箇所 |
 |---|---|---|
 | Rust | 1.97.0 (edition 2024) | `rust-toolchain.toml`, CI |
-| Node.js | 22.22.0 | `.node-version`, CI |
+| Node.js | 22.22.0 (`engines`: `^22.18.0 || >=24.11.0`、Vite+の要件) | `.node-version`, `package.json`, CI |
 | pnpm | 10.28.0 | `package.json#packageManager`, CI |
 | Vite+ (`vp`) | 1.3.0 | `vite-plus` を `apps/web` / `packages/protocol-ts` で固定 |
 | Buf | 1.74.0 | ルート `package.json` |
@@ -17,7 +17,7 @@
 ```sh
 pnpm install
 pnpm dev          # vp dev
-pnpm check        # vp check (format + lint + typecheck)
+pnpm check        # vp check (format + lint + typecheck; vite.config.tsの lint.options.typeAware/typeCheck で型検査を有効化)
 pnpm test         # vp test run
 pnpm build        # vp build
 pnpm proto:lint   # buf lint

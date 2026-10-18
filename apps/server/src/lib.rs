@@ -8,3 +8,7 @@ pub mod proto {
         "/protobuf_generated/protolive/v1/generated.rs"
     ));
 }
+
+pub mod adapter;
+pub mod room;
+pub mod server;

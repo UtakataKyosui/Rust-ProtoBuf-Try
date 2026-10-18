@@ -7,8 +7,45 @@ ProtoLiveは、Rustでリアルタイムチャットアプリケーションを�
 REALITYの配信基盤で採用されている WebSocket + Protocol Buffers の組み合わせを技術的な参考にしつつ、初期スコープをテキストチャットに限定します。REALITYの非公開APIや独自通信仕様を再実装するものではありません。
 
 > [!NOTE]
-> **Status: Planning / Experimental**  
-> 本READMEは初期設計です。機能、ディレクトリ、コマンドは実装予定を含みます。Google公式Rust Protobufはベータ段階であり、APIやビルド手順の変更を想定します。
+> **Status: Experimental (MVP 実装済み)**  
+> テキストチャットのMVP(Rustサーバー・Reactクライアント・E2E・ベンチマーク)が動作します。Google公式Rust Protobufはベータ段階であり、APIやビルド手順は今後変わる可能性があります。設計判断と評価は [docs/dependency.md](docs/dependency.md) を参照してください。
+
+## Getting Started
+
+### 必要なもの
+
+|ツール|バージョン|備考|
+|---|---|---|
+|Rust|1.97.0|`rust-toolchain.toml`で固定。C コンパイラ(gcc/clang)が必要(upbカーネルのビルド)|
+|protoc|36.2|Rust Protobuf `4.36.2-release` と厳密に一致させる([docs/protobuf.md](docs/protobuf.md))|
+|Node.js|22.22.0|`.node-version`|
+|pnpm|10.28.0|`packageManager`|
+
+### 起動
+
+```sh
+pnpm install                       # 依存導入と TypeScript 型の生成(buf generate)
+cargo run -p protolive-server      # ws://127.0.0.1:3000/ws
+pnpm dev                           # 別ターミナル。http://localhost:5173 (/ws はサーバーへ proxy)
+```
+
+ブラウザを2つ開き、別のニックネームで参加するとメッセージを送受信できます。
+
+### 品質チェック・テスト
+
+```sh
+cargo fmt --all --check && cargo clippy --workspace --all-targets -- -D warnings
+cargo test --workspace
+pnpm proto:lint && pnpm -r check && pnpm -r test && pnpm -r build
+
+# E2E (Playwright + 実サーバー)。初回のみ: pnpm --filter @protolive/web exec playwright install chromium
+cargo build -p protolive-server && pnpm --filter @protolive/web e2e
+
+# JSON / Protobuf ベンチマーク
+cargo bench -p protolive-server --bench codec
+```
+
+詳細は [docs/development.md](docs/development.md)、[docs/server.md](docs/server.md)、[docs/web.md](docs/web.md)、[docs/benchmark.md](docs/benchmark.md)。
 
 Goals
 
@@ -166,32 +203,32 @@ Roadmap
 
 Phase 1: Official Rust Protobuf foundation
 
-☐ Google公式ランタイム・コード生成器・対応protocを固定
-☐ .protoの作成とRust/TypeScriptコード生成
-☐ 各言語でエンコード・デコードの往復テスト
-☐ Rust → TypeScript、TypeScript → Rustの相互運用テスト
-☐ ビルド方法、APIの制約、既知の問題を記録
+☑ Google公式ランタイム・コード生成器・対応protocを固定
+☑ .protoの作成とRust/TypeScriptコード生成
+☑ 各言語でエンコード・デコードの往復テスト
+☑ Rust → TypeScript、TypeScript → Rustの相互運用テスト
+☑ ビルド方法、APIの制約、既知の問題を記録
 
 Phase 2: Rust chat server
 
-☐ AxumのWebSocketエンドポイント
-☐ 参加・切断・配信のインメモリ状態管理
-☐ Protobufデコード、入力検証、エラー処理
-☐ 複数接続へのブロードキャスト
+☑ AxumのWebSocketエンドポイント
+☑ 参加・切断・配信のインメモリ状態管理
+☑ Protobufデコード、入力検証、エラー処理
+☑ 複数接続へのブロードキャスト
 
 Phase 3: React chat client
 
-☐ ニックネーム入力・メッセージ入力・ログ表示
-☐ Protobufバイナリの送受信
-☐ 接続状態表示・再接続時の再参加
-☐ 2つ以上のブラウザによるE2E確認
+☑ ニックネーム入力・メッセージ入力・ログ表示
+☑ Protobufバイナリの送受信
+☑ 接続状態表示・再接続時の再参加
+☑ 2つ以上のブラウザによるE2E確認
 
 Phase 4: Evaluation
 
-☐ JSONとProtobufのペイロードサイズ比較
-☐ シリアライズ・デシリアライズ時間比較
-☐ 接続数や送信頻度を変えた負荷実験
-☐ Google公式Rust Protobufの採用評価を文書化
+☑ JSONとProtobufのペイロードサイズ比較
+☑ シリアライズ・デシリアライズ時間比較
+☐ 接続数や送信頻度を変えた負荷実験(未実施。MVPスコープ外)
+☑ Google公式Rust Protobufの採用評価を文書化
 
 MVP Acceptance Criteria
 

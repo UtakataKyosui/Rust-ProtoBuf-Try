@@ -1,6 +1,6 @@
 ProtoLive — Dependency & Tooling Plan
 
-> Status: Proposed / MVP · Updated: 2026-10-17
+> Status: MVP 実装済み(§12 に採用評価) · Updated: 2026-10-18
 
 1. Purpose
 
@@ -211,3 +211,53 @@ Known uncertainty: Google Rust Protobuf is beta and upstream APIs or crate distr
 • Protobuf-ES: https://protobuf-es.com/
 • Buf: https://buf.build/docs/
 • Cargo: https://doc.rust-lang.org/cargo/
+
+12. 採用評価(MVP 実装後の結論)
+
+実装・検証が完了したため、計画(§1〜§11)に対する実際の結果を記す。セットアップとコマンドは README、詳細は `docs/` 配下を参照。
+
+## 12.1 ツールチェーン
+
+|項目|結論|
+|---|---|
+|React 側|VoidZero **Vite+**(`vite-plus` / `vp`)を採用。素の Vite とは別物で、`vp dev/check/test/build` を使う。`pnpm-workspace.yaml` の `overrides` で `vite` / `vitest` を Vite+ 同梱版に統一(peer 警告は出るが動作に影響しない)。型検査は `vite.config.ts` の `lint.options.typeAware/typeCheck`|
+|Rust Protobuf|Google 公式 `protobuf =4.36.2-release` + `protobuf-codegen =4.36.2-release`、protoc **36.2**(クレート `x.y.z` ↔ protoc `y.z` の厳密一致)。§3 の `google-protobuf` 直接依存ではなく `protobuf` クレート経由の再公開に一本化した|
+|コード生成|Rust: `build.rs` → `$OUT_DIR`(コミットしない)。TypeScript: `buf generate`(`@bufbuild/protoc-gen-es`)→ `packages/protocol-ts/src/gen`(コミットしない、`postinstall` と check/test/build で再生成)。`.proto` は `proto/protolive/v1/chat.proto` 1 ファイル(計画の 3 分割はしなかった)|
+|React の UI|Tailwind / shadcn/ui は未導入。標準 `useReducer` とプレーン CSS で足りた|
+
+## 12.2 Google 公式 Rust Protobuf の評価
+
+- **良い点**: 生成コードが素直で、`oneof` / 未知フィールド / 不正バイト列の扱いが Protobuf-ES と golden バイナリで相互に一致した。
+  encode / decode 単体は serde_json より高速(`docs/benchmark.md`)。
+- **制約・注意**: (1) beta で API が変わりうる。(2) upb(C)カーネルのため C コンパイラが要り、Pure Rust ではない。
+  (3) protoc のバージョンが厳密一致で、CI・手元とも固定が必要。(4) セッター中心の API で、短い値の構築+encode は JSON より遅くなりうる。
+  (5) 生成型は Clippy 警告が出るため生成モジュールのみ `allow` し、`adapter` でドメイン型と分離した。
+- **判断**: 学習・評価目的としては採用可。ただし本番で採用するなら上記制約(特に beta と protoc 固定)の許容が前提。
+
+## 12.3 非採用としたもの
+
+|候補|理由|
+|---|---|
+|`ts-rs` / `specta`|Rust 型から TS 型を生成する方式で、「`.proto` を唯一の定義元にする」「Protobuf-ES の encode/decode まで共有する」という目的と合わない。型だけ共有しても wire format の相互運用は検証できない|
+|`prost`|Google 公式実装の評価が目的のため。比較対象として将来ベンチに加える余地はある|
+|`tonic` / gRPC|MVP は WebSocket Binary。ブラウザから gRPC を使うには grpc-web 等の追加層が要る|
+|`react-use-websocket`, Zustand, TanStack Query|標準 `WebSocket` と `useReducer` で足りる。REST の状態管理がない|
+|DB / Redis / 認証 / moonrepo / Docker|単一プロセス・単一ルーム・永続化なしの範囲外|
+
+## 12.4 品質ゲートの結果
+
+|ゲート|結果|検証方法|
+|---|---|---|
+|G1 公式コード生成|達成|`cargo test`(Linux x86_64)。macOS は未検証|
+|G2 言語間相互運用|達成|`fixtures/golden` を Rust と TypeScript の双方で検証|
+|G3 チャット MVP|達成|Playwright E2E(2 ブラウザ)|
+|G4 堅牢性|達成|`apps/server/tests/ws.rs`(不正入力・Text 拒否・サイズ超過・lag 切断)、E2E(入力エラー・再接続・サーバー再起動)|
+|G5 評価|達成(シリアライズ単体)|`docs/benchmark.md`。E2E 遅延・メモリ・負荷試験は未実施|
+
+CI(`.github/workflows/ci.yml`)は `rust`(fmt / clippy / test)、`web`(check / test / build)、`e2e`、`proto`(buf lint / breaking)の 4 ジョブ。
+
+## 12.5 既知の制約
+
+- 切断・再接続時の入退室通知の重複や未達、サーバー再起動をまたぐ過去ログの保持は保証しない(MVP)。
+- `sender_id` は接続ごとの一時識別子で、認証済みユーザー ID ではない。
+- 公開環境で使うには、レート制限・Origin 検証・TLS 終端などの追加対策が必要。

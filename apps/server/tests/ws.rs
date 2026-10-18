@@ -224,3 +224,19 @@ async fn graceful_shutdown_closes_sessions() {
     shutdown.send(true).unwrap();
     assert_eq!(closed_code(&mut c).await, Some(1001));
 }
+
+#[tokio::test]
+async fn client_initiated_close_gets_a_close_reply() {
+    let (addr, _shutdown) = start(ServerConfig::default()).await;
+    let mut c = connect(addr).await;
+    c.send(join("alice")).await.unwrap();
+    assert_eq!(next_event(&mut c).await, "joined:alice");
+    c.send(Message::Close(None)).await.unwrap();
+    // サーバーの Close 応答が届く(異常切断にならない)。
+    assert!(matches!(
+        tokio::time::timeout(Duration::from_secs(5), c.next())
+            .await
+            .unwrap(),
+        Some(Ok(Message::Close(_)))
+    ));
+}

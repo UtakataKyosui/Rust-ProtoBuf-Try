@@ -86,6 +86,8 @@ async fn ws_handler(State(state): State<AppState>, ws: WebSocketUpgrade) -> impl
 enum Exit {
     /// クライアントが閉じた、または接続が切れた。こちらからは何も送らない。
     Disconnected,
+    /// クライアントから Close を受けた。返信は次の read/write で送出されるので駆動が必要。
+    PeerClosed,
     Close(u16, &'static str),
 }
 
@@ -97,6 +99,10 @@ async fn run_session(mut socket: WebSocket, state: AppState) {
 
     // 切断・異常終了のいずれでも必ず退出処理を通す。
     state.room.leave(&conn_id);
+    if matches!(exit, Exit::PeerClosed) {
+        // tungstenite が自動で積んだ Close 応答を送出させる(次の read で flush される)。
+        let _ = tokio::time::timeout(CLOSE_HANDSHAKE_TIMEOUT, socket.recv()).await;
+    }
     if let Exit::Close(code, reason) = exit {
         let sent = socket
             .send(Message::Close(Some(CloseFrame {
@@ -151,7 +157,7 @@ async fn session_loop(socket: &mut WebSocket, state: &AppState, conn_id: &str) -
                     }
                     // Pong は axum/tungstenite が自動で返す。ここでは生存確認として扱うだけ。
                     Message::Ping(_) | Message::Pong(_) => {}
-                    Message::Close(_) => return Exit::Disconnected,
+                    Message::Close(_) => return Exit::PeerClosed,
                 }
             }
             frame = recv_room(&mut room_rx) => {

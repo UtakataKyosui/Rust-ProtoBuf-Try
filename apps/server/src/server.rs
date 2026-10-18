@@ -12,7 +12,7 @@ use axum::extract::ws::{CloseFrame, Message, WebSocket, WebSocketUpgrade, close_
 use axum::response::IntoResponse;
 use axum::routing::get;
 use tokio::sync::{broadcast, watch};
-use tokio::time::{Instant, MissedTickBehavior, interval};
+use tokio::time::{Instant, MissedTickBehavior, interval_at};
 use tracing::{debug, info, warn};
 use uuid::Uuid;
 
@@ -124,7 +124,11 @@ async fn run_session(mut socket: WebSocket, state: AppState) {
 async fn session_loop(socket: &mut WebSocket, state: &AppState, conn_id: &str) -> Exit {
     let mut shutdown = state.shutdown.clone();
     let mut room_rx: Option<broadcast::Receiver<Frame>> = None;
-    let mut ping = interval(state.config.ping_interval);
+    // `interval` は初回が即時に発火するので、1 周期後から開始する。
+    let mut ping = interval_at(
+        Instant::now() + state.config.ping_interval,
+        state.config.ping_interval,
+    );
     ping.set_missed_tick_behavior(MissedTickBehavior::Delay);
     let mut last_seen = Instant::now();
 

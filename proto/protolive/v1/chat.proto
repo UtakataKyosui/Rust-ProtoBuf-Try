@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package protolive.v1;
+
+message JoinRequest {
+  string nickname = 1;
+}
+
+message SendChatRequest {
+  string content = 1;
+}
+
+message ClientEnvelope {
+  oneof payload {
+    JoinRequest join = 1;
+    SendChatRequest send_chat = 2;
+  }
+}
+
+message ChatMessage {
+  string id = 1;
+  string sender_id = 2;
+  string nickname = 3;
+  string content = 4;
+  uint64 timestamp_ms = 5;
+}
+
+message MemberEvent {
+  string sender_id = 1;
+  string nickname = 2;
+}
+
+message ErrorEvent {
+  string code = 1;
+  string message = 2;
+}
+
+message ServerEnvelope {
+  oneof payload {
+    MemberEvent joined = 1;
+    MemberEvent left = 2;
+    ChatMessage chat = 3;
+    ErrorEvent error = 4;
+  }
+}

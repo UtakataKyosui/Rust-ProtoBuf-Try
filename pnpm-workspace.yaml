@@ -1,0 +1,11 @@
+packages:
+  - apps/*
+  - packages/*
+
+# Vite+ ツールチェーン: vite / vitest を vite-plus 同梱版に統一する
+overrides:
+  vite: "npm:@voidzero-dev/vite-plus-core@1.3.0"
+  vitest: "5.0.5"
+
+onlyBuiltDependencies:
+  - "@bufbuild/buf"
